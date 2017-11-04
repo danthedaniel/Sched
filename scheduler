@@ -29,17 +29,29 @@ class Task:
         self.duration = timedelta(duration)
         self.start = None
 
-    def end_time(self):
+    @property
+    def end(self):
         """Calculate the end time for the task based on the start and duration."""
         return self.start + self.duration
 
+    def is_milestone(self):
+        return self.start == self.end
+
     def __str__(self):
         """Pretty-print a Task."""
-        return "{} -> {}: {}".format(
-            self.start.strftime("%m/%d/%y"),
-            self.end_time().strftime("%m/%d/%y"),
-            self.title
-        )
+        if self.is_milestone():
+            return "Milestone:  {}: {} ({})".format(
+                self.start.strftime("%m/%d/%y"),
+                self.title,
+                self.lead
+            )
+        else:
+            return "{} -> {}: {} ({})".format(
+                self.start.strftime("%m/%d/%y"),
+                self.end.strftime("%m/%d/%y"),
+                self.title,
+                self.lead
+            )
 
 
 class Graph:
@@ -80,9 +92,6 @@ class Graph:
         start_time : datetime
             Date to assign to root nodes.
         """
-        if start_time is None:
-            start_time = datetime.now()
-
         edges = deepcopy(self.edges)
         nodes = deepcopy(self.nodes)
 
@@ -102,7 +111,7 @@ class Graph:
                     self.edges.remove((root_idx, x))
 
                     if len(self.edges_to(x)) == 0:
-                        self.nodes[x].start = root_node.end_time()
+                        self.nodes[x].start = root_node.end
                         roots.add(x)
 
             if len(self.edges) > 0:
@@ -136,7 +145,7 @@ def main():
     """Main program driver."""
     args = _parse_args()
     if args.start_time is None:
-        start = None
+        start = datetime.now()
     else:
         start = datetime.strptime(args.start_time, "%m/%d/%y")
     graph = Graph()
