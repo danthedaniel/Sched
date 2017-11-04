@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""A PERT scheduler."""
+import argparse
+import csv
+from copy import deepcopy
+from datetime import datetime, timedelta
+
+
+class Task:
+    """A work unit."""
+
+    def __init__(self, idx, title, lead, duration):
+        """Create a Task.
+
+        Arguments
+        ---------
+        idx : int
+            Identifier for the task.
+        title : str
+            Name of the task.
+        lead : str
+            Name of the task leader.
+        duration : int
+            Number of days for task to be completed.
+        """
+        self.idx = idx
+        self.title = title
+        self.lead = lead
+        self.duration = timedelta(duration)
+        self.start = None
+
+    def end_time(self):
+        """Calculate the end time for the task based on the start and duration."""
+        return self.start + self.duration
+
+    def __str__(self):
+        """Pretty-print a Task."""
+        return "{} -> {}: {}".format(
+            self.start.strftime("%m/%d/%y"),
+            self.end_time().strftime("%m/%d/%y"),
+            self.title
+        )
+
+
+class Graph:
+    """A DAG."""
+
+    def __init__(self):
+        """Create a Graph."""
+        self.nodes = {}
+        self.edges = set()
+
+    def add_node(self, task):
+        """Add a node to the graph."""
+        self.nodes[task.idx] = task
+
+    def add_edge(self, from_idx, to_idx):
+        """Add an edge between two nodes."""
+        self.edges.add((from_idx, to_idx))
+
+    def edges_from(self, from_idx):
+        """Return indices of nodes with edges eminating from an index."""
+        return {x[1] for x in self.edges if x[0] == from_idx}
+
+    def edges_to(self, to_idx):
+        """Return indices of nodes with edges going to an index."""
+        return {x[0] for x in self.edges if x[1] == to_idx}
+
+    def roots(self):
+        """The set of indices for nodes with no incoming edges."""
+        all_nodes = set(self.nodes.keys())
+        nodes_with_incoming = {x[1] for x in self.edges}
+        return all_nodes - nodes_with_incoming
+
+    def sorted(self, start_time):
+        """Return a topologically-sorted list of nodes.
+
+        Arguments
+        ---------
+        start_time : datetime
+            Date to assign to root nodes.
+        """
+        if start_time is None:
+            start_time = datetime.now()
+
+        edges = deepcopy(self.edges)
+        nodes = deepcopy(self.nodes)
+
+        try:
+            sorted_list = []
+            roots = self.roots()
+
+            while len(roots) > 0:
+                root_idx = roots.pop()
+                root_node = self.nodes[root_idx]
+                sorted_list.append(root_node)
+
+                if root_node.start is None:
+                    root_node.start = start_time
+
+                for x in self.edges_from(root_idx):
+                    self.edges.remove((root_idx, x))
+
+                    if len(self.edges_to(x)) == 0:
+                        self.nodes[x].start = root_node.end_time()
+                        roots.add(x)
+
+            if len(self.edges) > 0:
+                raise ValueError("Graph is cyclic")
+            else:
+                return sorted_list
+        finally:
+            # Restore edges and nodes
+            self.edges = edges
+            self.nodes = nodes
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser(
+        description=(
+            "Perform PERT scheduling.\n\n"
+            "Reads in a schedule as a CSV file formatted as:\n"
+            "\tidx, task title, task lead, duration (days), [dep 1, ...]\n"
+            "Where dependencies are identified by the idx of another task. "
+        ),
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("csv_file", type=str,
+                        help="CSV file containing a list of tasks")
+    parser.add_argument("--start", dest="start_time", action="store",
+                        help="Start time in mm/dd/yy format")
+    return parser.parse_args()
+
+
+def main():
+    """Main program driver."""
+    args = _parse_args()
+    if args.start_time is None:
+        start = None
+    else:
+        start = datetime.strptime(args.start_time, "%m/%d/%y")
+    graph = Graph()
+
+    # Expects a CSV in the format:
+    #   idx, task title, lead, duration (days), [dependency 1, dependency 2, ...]
+    with open(args.csv_file, "r") as csv_file:
+        for line in csv.reader(csv_file):
+            idx = int(line[0])
+            task = Task(idx, line[1], line[2], int(line[3]))
+            graph.add_node(task)
+
+            for incoming_edge in line[4:]:
+                graph.add_edge(int(incoming_edge), idx)
+
+    for task in graph.sorted(start):
+        print(str(task))
+
+
+if __name__ == "__main__":
+    main()
