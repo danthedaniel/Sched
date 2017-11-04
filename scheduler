@@ -37,6 +37,10 @@ class Task:
     def is_milestone(self):
         return self.start == self.end
 
+    def set_start(self, start):
+        """Set start to specified time if it's after the current start time."""
+        self.start = start if self.start is None else max(self.start, start)
+
     def __str__(self):
         """Pretty-print a Task."""
         if self.is_milestone():
@@ -109,9 +113,9 @@ class Graph:
 
                 for x in self.edges_from(root_idx):
                     self.edges.remove((root_idx, x))
+                    self.nodes[x].set_start(root_node.end)
 
                     if len(self.edges_to(x)) == 0:
-                        self.nodes[x].start = root_node.end
                         roots.add(x)
 
             if len(self.edges) > 0:
