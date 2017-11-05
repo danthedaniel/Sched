@@ -39,13 +39,13 @@ Using a file called `sched.csv` with the following contents:
 You will receive the following output:
 
 ```
-./scheduler --start 11/7/17 sched.csv
-11/07/17 -> 11/21/17: Task C (teaearlgraycold)
-11/07/17 -> 11/10/17: Task A (teaearlgraycold)
-11/07/17 -> 11/11/17: Task B (teaearlgraycold)
-11/11/17 -> 11/16/17: Task E (teaearlgraycold)
-11/11/17 -> 11/12/17: Task D (teaearlgraycold)
-11/12/17 -> 11/21/17: Task G (teaearlgraycold)
-11/12/17 -> 11/21/17: Task H (teaearlgraycold)
-11/12/17 -> 11/18/17: Task F (teaearlgraycold)
+./scheduler --start 11/5/17 sched.csv
+11/05/17 -> 11/19/17: Task C (teaearlgraycold)
+11/05/17 -> 11/08/17: Task A (teaearlgraycold)
+11/05/17 -> 11/09/17: Task B (teaearlgraycold)
+11/19/17 -> 11/24/17: Task E (teaearlgraycold)
+11/09/17 -> 11/10/17: Task D (teaearlgraycold)
+11/24/17 -> 12/03/17: Task G (teaearlgraycold)
+11/19/17 -> 11/28/17: Task H (teaearlgraycold)
+11/10/17 -> 11/16/17: Task F (teaearlgraycold)
 ```

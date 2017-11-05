@@ -2,8 +2,14 @@
 """A PERT scheduler."""
 import argparse
 import csv
+import re
+import io
 from copy import deepcopy
 from datetime import datetime, timedelta
+
+
+# Match trailing commas on the end of a line
+COMMA_RE = re.compile(r",+$", re.MULTILINE)
 
 
 class Task:
@@ -34,7 +40,7 @@ class Task:
         """Calculate the end time for the task based on the start and duration."""
         return self.start + self.duration
 
-    def is_milestone(self):
+    def _is_milestone(self):
         return self.start == self.end
 
     def set_start(self, start):
@@ -43,7 +49,7 @@ class Task:
 
     def __str__(self):
         """Pretty-print a Task."""
-        if self.is_milestone():
+        if self._is_milestone():
             return "Milestone:  {}: {} ({})".format(
                 self.start.strftime("%m/%d/%y"),
                 self.title,
@@ -100,6 +106,7 @@ class Graph:
         nodes = deepcopy(self.nodes)
 
         try:
+            # Kahn's algorithm
             sorted_list = []
             roots = self.roots()
 
@@ -107,9 +114,7 @@ class Graph:
                 root_idx = roots.pop()
                 root_node = self.nodes[root_idx]
                 sorted_list.append(root_node)
-
-                if root_node.start is None:
-                    root_node.start = start_time
+                root_node.set_start(start_time)
 
                 for x in self.edges_from(root_idx):
                     self.edges.remove((root_idx, x))
@@ -145,6 +150,13 @@ def _parse_args():
     return parser.parse_args()
 
 
+def strip_commas(csv_file):
+    """Remove trailing commas from each line of a file."""
+    # First replace trailing commas
+    cleaned_csv = COMMA_RE.sub('', csv_file.read())
+    return cleaned_csv.splitlines()
+
+
 def main():
     """Main program driver."""
     args = _parse_args()
@@ -157,7 +169,7 @@ def main():
     # Expects a CSV in the format:
     #   idx, task title, lead, duration (days), [dependency 1, dependency 2, ...]
     with open(args.csv_file, "r") as csv_file:
-        for line in csv.reader(csv_file):
+        for line in csv.reader(strip_commas(csv_file), delimiter=','):
             idx = int(line[0])
             task = Task(idx, line[1], line[2], int(line[3]))
             graph.add_node(task)
