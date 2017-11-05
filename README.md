@@ -1,6 +1,5 @@
-scheduler
+![Sched Logo](Sched.svg)
 ===
-
 A PERT scheduler.
 
 ## Usage
@@ -26,7 +25,7 @@ optional arguments:
 
 Using a file called `sched.csv` with the following contents:
 
-```
+```sql
 5,Task A,teaearlgraycold,3
 7,Task B,teaearlgraycold,4
 3,Task C,teaearlgraycold,14
