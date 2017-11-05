@@ -5,7 +5,8 @@ A PERT scheduler.
 ## Usage
 
 ```
-usage: scheduler [-h] [--start START_TIME] csv_file
+usage: scheduler [-h] [--start START_TIME] [--order {start,end,title,lead}]
+                 csv_file
 
 Perform PERT scheduling.
 
@@ -14,11 +15,13 @@ Reads in a schedule as a CSV file formatted as:
 Where dependencies are identified by the idx of another task.
 
 positional arguments:
-  csv_file            CSV file containing a list of tasks
+  csv_file              CSV file containing a list of tasks
 
 optional arguments:
-  -h, --help          show this help message and exit
-  --start START_TIME  Start time in mm/dd/yy format
+  -h, --help            show this help message and exit
+  --start START_TIME    Start time in mm/dd/yy format
+  --order {start,end,title,lead}
+                        What to order the output by.
 ```
 
 ## Example
@@ -43,9 +46,9 @@ You will receive the following output:
 11/05/17 -> 11/19/17: Task C (teaearlgraycold)
 11/05/17 -> 11/08/17: Task A (teaearlgraycold)
 11/05/17 -> 11/09/17: Task B (teaearlgraycold)
-11/19/17 -> 11/24/17: Task E (teaearlgraycold)
 11/09/17 -> 11/10/17: Task D (teaearlgraycold)
-11/24/17 -> 12/03/17: Task G (teaearlgraycold)
-11/19/17 -> 11/28/17: Task H (teaearlgraycold)
 11/10/17 -> 11/16/17: Task F (teaearlgraycold)
+11/19/17 -> 11/24/17: Task E (teaearlgraycold)
+11/19/17 -> 11/28/17: Task H (teaearlgraycold)
+11/24/17 -> 12/03/17: Task G (teaearlgraycold)
 ```

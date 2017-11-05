@@ -3,7 +3,6 @@
 import argparse
 import csv
 import re
-import io
 from copy import deepcopy
 from datetime import datetime, timedelta
 
@@ -107,13 +106,13 @@ class Graph:
 
         try:
             # Kahn's algorithm
-            sorted_list = []
+            deps_list = []
             roots = self.roots()
 
             while len(roots) > 0:
                 root_idx = roots.pop()
                 root_node = self.nodes[root_idx]
-                sorted_list.append(root_node)
+                deps_list.append(root_node)
                 root_node.set_start(start_time)
 
                 for x in self.edges_from(root_idx):
@@ -126,7 +125,7 @@ class Graph:
             if len(self.edges) > 0:
                 raise ValueError("Graph is cyclic")
             else:
-                return sorted_list
+                return deps_list
         finally:
             # Restore edges and nodes
             self.edges = edges
@@ -147,6 +146,10 @@ def _parse_args():
                         help="CSV file containing a list of tasks")
     parser.add_argument("--start", dest="start_time", action="store",
                         help="Start time in mm/dd/yy format")
+    parser.add_argument("--order", dest="order", action="store",
+                        help="What to order the output by.",
+                        choices=["start", "end", "title", "lead"],
+                        default="start", type=str)
     return parser.parse_args()
 
 
@@ -177,7 +180,10 @@ def main():
             for incoming_edge in line[4:]:
                 graph.add_edge(int(incoming_edge), idx)
 
-    for task in graph.sorted(start):
+    # Show tasks in different order if specified
+    tasks = sorted(graph.sorted(start), key=lambda x: getattr(x, args.order))
+
+    for task in tasks:
         print(str(task))
 
 
